@@ -31,6 +31,7 @@ Object.assign(ImageAnalyzer.prototype, {
     startPan(e) {
         if (!this.currentImage) return;
 
+        e.preventDefault();
         this.isPanning = true;
         const rect = this.canvas.getBoundingClientRect();
         const scaleX = this.canvas.width / rect.width;
@@ -49,6 +50,7 @@ Object.assign(ImageAnalyzer.prototype, {
     panImage(e) {
         if (!this.isPanning) return;
 
+        e.preventDefault();
         const rect = this.canvas.getBoundingClientRect();
         const scaleX = this.canvas.width / rect.width;
         const scaleY = this.canvas.height / rect.height;
@@ -61,6 +63,17 @@ Object.assign(ImageAnalyzer.prototype, {
         this.panStartX = currentX;
         this.panStartY = currentY;
 
+        this.redrawCanvas();
+    },
+
+    /**
+     * 表示を初期状態にリセット
+     */
+    resetView() {
+        if (!this.currentImage) return;
+        this.zoom = 1;
+        this.panX = 0;
+        this.panY = 0;
         this.redrawCanvas();
     },
 

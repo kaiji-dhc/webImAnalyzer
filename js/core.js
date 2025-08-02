@@ -162,6 +162,8 @@ class ImageAnalyzer {
             // UI要素のリセット
             this.canvas.classList.add('hidden');
             this.dropZone.classList.remove('hidden');
+            const resetBtn = document.getElementById('resetView');
+            if (resetBtn) resetBtn.classList.add('hidden');
             
             // ステータス表示
             this.setStatusMessage('アプリケーションをリセットしました');

@@ -118,6 +118,7 @@ Object.assign(ImageAnalyzer.prototype, {
             if (e.button === 0) {
                 this.startDrawing(e);
             } else if (e.button === 1 || e.button === 2) {
+                e.preventDefault();
                 this.startPan(e);
             }
         });
@@ -125,6 +126,7 @@ Object.assign(ImageAnalyzer.prototype, {
         // マウスムーブ - 描画・パン・カーソル情報更新
         this.canvas.addEventListener('mousemove', (e) => {
             if (this.isPanning) {
+                e.preventDefault();
                 this.panImage(e);
             } else {
                 this.drawRectangle(e);
@@ -156,6 +158,14 @@ Object.assign(ImageAnalyzer.prototype, {
         this.canvas.addEventListener('wheel', (e) => {
             this.handleWheel(e);
         }, { passive: false });
+
+        // リセットボタン - 表示位置の初期化
+        const resetBtn = document.getElementById('resetView');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                this.resetView();
+            });
+        }
 
         // コンテキストメニュー無効化
         this.canvas.addEventListener('contextmenu', (e) => {

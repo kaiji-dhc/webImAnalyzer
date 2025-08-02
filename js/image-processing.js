@@ -68,6 +68,8 @@ Object.assign(ImageAnalyzer.prototype, {
     showImageCanvas() {
         this.dropZone.classList.add('hidden');
         this.canvas.classList.remove('hidden');
+        const resetBtn = document.getElementById('resetView');
+        if (resetBtn) resetBtn.classList.remove('hidden');
     },
 
     /**
