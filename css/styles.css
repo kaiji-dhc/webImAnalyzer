@@ -140,6 +140,10 @@ body {
     cursor: crosshair !important;
 }
 
+.panning {
+    cursor: move !important;
+}
+
 /* ステータス表示 */
 .status {
     position: absolute;
