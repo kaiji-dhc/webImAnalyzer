@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画像解析アプリ</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📷 カメラ画像解析アプリ</h1>
+            <p>カメラ画像（JPG/PNG/BMP/TIFF）をドラッグ&ドロップして、撮影パラメータと合わせて解析・記録</p>
+        </div>
+
+        <div class="main-content">
+            <div class="image-panel">
+                <div class="instructions">
+                    <h4>📋 使用方法</h4>
+                    <ul>
+                        <li>カメラ画像（JPG/PNG/BMP/TIFF）をドラッグ&ドロップ</li>
+                        <li>撮影パラメータを右パネルに入力</li>
+                        <li>画像上でドラッグして解析領域を選択</li>
+                        <li>SN比とヒストグラムで画質を評価</li>
+                    </ul>
+                </div>
+
+                <div id="dropZone" class="drop-zone">
+                    <p>📁 画像ファイルをここにドロップ</p>
+                    <small>または、クリックしてファイルを選択 (JPG, PNG, BMP, TIFF, WebP, GIF対応)</small>
+                </div>
+                <input type="file" id="fileInput" accept="image/jpeg,image/jpg,image/png,image/bmp,image/tiff,image/tif,image/webp,image/gif" aria-label="画像ファイルを選択" style="display: none;">
+
+                <canvas id="imageCanvas" class="hidden"></canvas>
+                <div id="status" class="status hidden"></div>
+            </div>
+
+            <div class="analysis-panel">
+                <div class="panel camera-panel">
+                    <h3>撮影パラメータ</h3>
+                    <div class="param-grid">
+                        <div class="param-item">
+                            <label class="param-label">シャッタースピード</label>
+                            <input type="text" class="param-input" id="shutterSpeed" placeholder="1/100">
+                        </div>
+                        <div class="param-item">
+                            <label class="param-label">F値</label>
+                            <input type="text" class="param-input" id="aperture" placeholder="f/2.8">
+                        </div>
+                        <div class="param-item">
+                            <label class="param-label">ISO感度</label>
+                            <input type="number" class="param-input" id="iso" placeholder="100">
+                        </div>
+                        <div class="param-item">
+                            <label class="param-label">アナログゲイン</label>
+                            <input type="number" class="param-input" id="analogGain" placeholder="1.0" step="0.1">
+                        </div>
+                        <div class="param-item">
+                            <label class="param-label">デジタルゲイン</label>
+                            <input type="number" class="param-input" id="digitalGain" placeholder="1.0" step="0.1">
+                        </div>
+                        <div class="param-item">
+                            <label class="param-label">ホワイトバランス</label>
+                            <input type="text" class="param-input" id="whiteBalance" placeholder="Auto / 5600K">
+                        </div>
+                        <div class="param-item full-width">
+                            <label class="param-label">RGB値 (0-255)</label>
+                            <div class="rgb-inputs">
+                                <input type="number" class="rgb-input" id="rValue" data-color="r" placeholder="R" min="0" max="255">
+                                <input type="number" class="rgb-input" id="gValue" data-color="g" placeholder="G" min="0" max="255">
+                                <input type="number" class="rgb-input" id="bValue" data-color="b" placeholder="B" min="0" max="255">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="param-note">
+                        💡 撮影時の設定値を記録して、画像解析結果と合わせて管理できます
+                        <br>
+                        <button id="saveParams" class="param-button primary">📄 パラメータ出力</button>
+                        <button id="clearParams" class="param-button secondary">🗑️ クリア</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3 style="margin-bottom: 5px;">📍 画像座標</h3>
+                    <div class="cursor-info">
+                        <div class="coord-display">
+                            <div class="coord-item">
+                                <span class="coord-label">X:</span>
+                                <span class="coord-value" id="cursorX">--</span>
+                            </div>
+                            <div class="coord-item">
+                                <span class="coord-label">Y:</span>
+                                <span class="coord-value" id="cursorY">--</span>
+                            </div>
+                        </div>
+                        <div class="pixel-info" id="pixelInfo">
+                            <div class="pixel-rgb">
+                                <span class="rgb-item" id="pixelR">R: --</span>
+                                <span class="rgb-item" id="pixelG">G: --</span>
+                                <span class="rgb-item" id="pixelB">B: --</span>
+                            </div>
+                            <div class="pixel-brightness">
+                                輝度: <span id="pixelBrightness">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>SN比 (Signal-to-Noise Ratio)</h3>
+                    <div id="snRatio" class="sn-ratio">--</div>
+                    <div class="sn-details">
+                        <div class="detail-item">
+                            <div class="detail-value" id="signalValue">--</div>
+                            <div class="detail-label">信号 (平均値)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value" id="noiseValue">--</div>
+                            <div class="detail-label">雑音 (標準偏差)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value" id="pixelCount">--</div>
+                            <div class="detail-label">画素数</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value" id="avgBrightness">--</div>
+                            <div class="detail-label">平均輝度</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>ヒストグラム分析</h3>
+                    <div class="histogram-controls">
+                        <div class="histogram-mode-selector">
+                            <button class="mode-btn active" data-mode="brightness">輝度</button>
+                            <button class="mode-btn" data-mode="red">R</button>
+                            <button class="mode-btn" data-mode="green">G</button>
+                            <button class="mode-btn" data-mode="blue">B</button>
+                            <button class="mode-btn" data-mode="rgb-overlay">RGB重畳</button>
+                        </div>
+                        <div class="histogram-input">
+                            <label>特定値確認:</label>
+                            <input type="number" id="specificValue" min="0" max="255" placeholder="0-255">
+                            <span id="specificResult">--</span>
+                        </div>
+                    </div>
+                    <div class="histogram-container">
+                        <canvas id="histogramChart"></canvas>
+                        <div id="histogramTooltip" class="histogram-tooltip"></div>
+                    </div>
+                    <p class="histogram-help">
+                        💡 クリックで拡大表示 | マウスでホバー確認
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ヒストグラム拡大モーダル -->
+    <div id="histogramModal" class="histogram-modal">
+        <div class="histogram-modal-content">
+            <button class="histogram-close" onclick="closeHistogramModal()">&times;</button>
+            <h3>📈 ヒストグラム詳細表示（1刻み）</h3>
+            <p class="histogram-modal-help">
+                💡 横スクロールで0-255の全範囲を確認できます
+            </p>
+            <div class="histogram-scroll-container">
+                <canvas id="histogramChartLarge" width="2040" height="400"></canvas>
+            </div>
+            <div id="histogramInfo" class="histogram-info">
+                <!-- JavaScript で動的に生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript ファイルの読み込み -->
+    <script src="js/core.js"></script>
+    <script src="js/image-processing.js"></script>
+    <script src="js/mouse-operations.js"></script>
+    <script src="js/analysis.js"></script>
+    <script src="js/histogram.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/ui-controls.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
