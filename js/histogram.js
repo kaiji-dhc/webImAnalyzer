@@ -420,7 +420,8 @@ Object.assign(ImageAnalyzer.prototype, {
     safeUpdateHistogram() {
         try {
             if (!this.currentHistogramData || this.isAnalyzing) return;
-            
+            if (this.drawMode === 'line') return;
+
             const mode = this.currentHistogramMode;
             
             if (mode === 'rgb-overlay') {
@@ -836,7 +837,7 @@ Object.assign(ImageAnalyzer.prototype, {
      * レガシー互換性関数
      */
     updateHistogramDisplay() {
-        if (!this.isAnalyzing) {
+        if (!this.isAnalyzing && this.drawMode !== 'line') {
             setTimeout(() => {
                 this.safeUpdateHistogram();
             }, 10);
