@@ -153,6 +153,15 @@
                         💡 クリックで拡大表示 | マウスでホバー確認
                     </p>
                 </div>
+
+                <div class="panel">
+                    <h3>ラインプロファイル</h3>
+                    <button id="lineProfileBtn" class="param-button primary" style="margin-bottom:10px;">ライン測定</button>
+                    <div class="histogram-container" style="height:180px;">
+                        <canvas id="lineProfileChart" width="300" height="150"></canvas>
+                    </div>
+                    <div id="peakInfo" class="peak-info">ピークなし</div>
+                </div>
             </div>
         </div>
     </div>
@@ -180,6 +189,7 @@
     <script src="js/mouse-operations.js"></script>
     <script src="js/analysis.js"></script>
     <script src="js/histogram.js"></script>
+    <script src="js/line-profile.js"></script>
     <script src="js/events.js"></script>
     <script src="js/ui-controls.js"></script>
     <script src="js/main.js"></script>

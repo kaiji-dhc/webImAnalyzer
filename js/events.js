@@ -113,26 +113,42 @@ Object.assign(ImageAnalyzer.prototype, {
     initCanvasEvents() {
         if (!this.canvas) return;
 
-        // マウスダウン - 矩形描画開始
+        // マウスダウン
         this.canvas.addEventListener('mousedown', (e) => {
-            this.startDrawing(e);
+            if (this.drawMode === 'rect') {
+                this.startDrawing(e);
+            } else if (this.drawMode === 'line' && this.lineAnalyzer) {
+                this.lineAnalyzer.start(e);
+            }
         });
 
-        // マウスムーブ - 矩形描画・カーソル情報更新
+        // マウスムーブ
         this.canvas.addEventListener('mousemove', (e) => {
-            this.drawRectangle(e);
+            if (this.drawMode === 'rect') {
+                this.drawRectangle(e);
+            } else if (this.drawMode === 'line' && this.lineAnalyzer) {
+                this.lineAnalyzer.draw(e);
+            }
             this.updateCursorInfo(e);
         });
 
-        // マウスアップ - 矩形描画終了
+        // マウスアップ
         this.canvas.addEventListener('mouseup', (e) => {
-            this.endDrawing(e);
+            if (this.drawMode === 'rect') {
+                this.endDrawing(e);
+            } else if (this.drawMode === 'line' && this.lineAnalyzer) {
+                this.lineAnalyzer.end(e);
+            }
         });
 
         // マウスリーブ - 描画中止・カーソル情報クリア
         this.canvas.addEventListener('mouseleave', (e) => {
-            if (this.isDrawing) {
-                this.endDrawing(e);
+            if (this.drawMode === 'rect') {
+                if (this.isDrawing) {
+                    this.endDrawing(e);
+                }
+            } else if (this.drawMode === 'line' && this.lineAnalyzer && this.lineAnalyzer.drawer.isDrawing) {
+                this.lineAnalyzer.end(e);
             }
             this.clearCursorInfo();
         });

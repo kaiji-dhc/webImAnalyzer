@@ -50,7 +50,8 @@ class ImageAnalyzer {
         this.startX = 0;
         this.startY = 0;
         this.currentRect = null;
-        
+        this.drawMode = 'rect';
+
         // 解析関連
         this.isAnalyzing = false; // 無限再帰防止フラグ
         this.currentHistogramData = null;
@@ -61,6 +62,9 @@ class ImageAnalyzer {
         this.histogramCtx = null;
         this.histogramLargeCanvas = null;
         this.histogramLargeCtx = null;
+
+        // ラインプロファイル
+        this.lineAnalyzer = null;
     }
 
     /**
@@ -72,15 +76,18 @@ class ImageAnalyzer {
         try {
             // イベントリスナーの設定
             this.initEventListeners();
-            
+
             // ヒストグラム機能の初期化
             this.initHistogramChart();
             this.initHistogramModal();
             this.initHistogramControls();
-            
+
             // UI制御の初期化
             this.initUIControls();
-            
+
+            // ラインプロファイル機能
+            this.lineAnalyzer = new LineAnalyzer(this);
+
         } catch (error) {
             console.error('Error initializing modules:', error);
         }
@@ -143,6 +150,7 @@ class ImageAnalyzer {
             // 描画状態のリセット
             this.isDrawing = false;
             this.currentRect = null;
+            this.drawMode = 'rect';
             
             // 解析データのリセット
             this.isAnalyzing = false;
@@ -151,6 +159,13 @@ class ImageAnalyzer {
             // UI要素のリセット
             this.canvas.classList.add('hidden');
             this.dropZone.classList.remove('hidden');
+
+            if (this.lineAnalyzer) {
+                this.lineAnalyzer.graph.draw({ r: [], g: [], b: [], brightness: [] });
+                if (this.lineAnalyzer.peakInfo) {
+                    this.lineAnalyzer.peakInfo.textContent = 'ピークなし';
+                }
+            }
             
             // ステータス表示
             this.setStatusMessage('アプリケーションをリセットしました');
