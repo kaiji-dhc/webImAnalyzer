@@ -122,6 +122,14 @@ Object.assign(ImageAnalyzer.prototype, {
             this.drawMode = 'rect';
             this.updateModeButtons('rect');
             this.setStatusMessage('矩形モード');
+            if (this.currentRect) {
+                this.redrawCanvas();
+                const r = this.currentRect;
+                this.drawSelectionRectangle(r.x, r.y, r.x + r.width, r.y + r.height);
+            }
+            if (this.currentHistogramData) {
+                setTimeout(() => this.safeUpdateHistogram(), 10);
+            }
         });
 
         lineBtn.addEventListener('click', () => {

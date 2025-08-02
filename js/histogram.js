@@ -75,7 +75,7 @@ Object.assign(ImageAnalyzer.prototype, {
      * ヒストグラム制御の初期化
      */
     initHistogramControls() {
-        const modeButtons = document.querySelectorAll('.mode-btn');
+        const modeButtons = document.querySelectorAll('.histogram-mode-selector .mode-btn');
         
         modeButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
