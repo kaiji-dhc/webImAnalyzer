@@ -256,9 +256,17 @@ Object.assign(ImageAnalyzer.prototype, {
         }
         
         // 元画像座標に変換
-        const originalX = Math.round((imageX / this.displayedWidth) * this.currentImage.width);
-        const originalY = Math.round((imageY / this.displayedHeight) * this.currentImage.height);
-        
+        // Math.round を使用すると右端/下端付近で width/height を超える値に丸められることがあるため
+        // Math.floor で切り捨て、さらに最大値を width-1 / height-1 に制限する
+        const originalX = Math.min(
+            Math.floor((imageX / this.displayedWidth) * this.currentImage.width),
+            this.currentImage.width - 1
+        );
+        const originalY = Math.min(
+            Math.floor((imageY / this.displayedHeight) * this.currentImage.height),
+            this.currentImage.height - 1
+        );
+
         return { x: originalX, y: originalY };
     },
 
