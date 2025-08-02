@@ -68,6 +68,8 @@ Object.assign(ImageAnalyzer.prototype, {
     showImageCanvas() {
         this.dropZone.classList.add('hidden');
         this.canvas.classList.remove('hidden');
+        const resetBtn = document.getElementById('resetView');
+        if (resetBtn) resetBtn.classList.remove('hidden');
     },
 
     /**
@@ -124,22 +126,26 @@ Object.assign(ImageAnalyzer.prototype, {
             const scaleToFit = Math.min(displayAreaWidth / originalWidth, displayAreaHeight / originalHeight);
             const minScale = Math.min(200 / originalWidth, 150 / originalHeight);
             const finalScale = Math.max(minScale, Math.min(scaleToFit, 3.0));
-            
-            this.displayedWidth = originalWidth * finalScale;
-            this.displayedHeight = originalHeight * finalScale;
+
+            this.baseScale = finalScale;
+            this.zoom = 1;
+            this.viewWidth = originalWidth * finalScale;
+            this.viewHeight = originalHeight * finalScale;
+            this.displayedWidth = this.viewWidth;
+            this.displayedHeight = this.viewHeight;
+            this.panX = 0;
+            this.panY = 0;
 
             console.log('Display size:', this.displayedWidth, 'x', this.displayedHeight, 'Scale:', finalScale);
 
             // Canvas設定
-            this.canvas.width = this.displayedWidth + (this.imageMargin * 2);
-            this.canvas.height = this.displayedHeight + (this.imageMargin * 2);
-            this.imageOffsetX = this.imageMargin;
-            this.imageOffsetY = this.imageMargin;
+            this.canvas.width = this.viewWidth + (this.imageMargin * 2);
+            this.canvas.height = this.viewHeight + (this.imageMargin * 2);
 
             // 描画
             this.redrawCanvas();
-            
-            const statusMessage = `画像表示完了: ${Math.round(this.displayedWidth)} × ${Math.round(this.displayedHeight)} px (スケール: ${(finalScale * 100).toFixed(1)}%)`;
+
+            const statusMessage = `画像表示完了: ${Math.round(this.viewWidth)} × ${Math.round(this.viewHeight)} px (スケール: ${(finalScale * 100).toFixed(1)}%)`;
             this.setStatusMessage(statusMessage);
             
         } catch (error) {
@@ -153,30 +159,35 @@ Object.assign(ImageAnalyzer.prototype, {
      */
     redrawCanvas() {
         if (!this.currentImage) return;
-        
+
+        this.displayedWidth = this.viewWidth * this.zoom;
+        this.displayedHeight = this.viewHeight * this.zoom;
+        this.imageOffsetX = this.imageMargin + this.panX - (this.displayedWidth - this.viewWidth) / 2;
+        this.imageOffsetY = this.imageMargin + this.panY - (this.displayedHeight - this.viewHeight) / 2;
+
         // キャンバスクリア
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         // 背景
         this.ctx.fillStyle = '#e9ecef';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         // 画像描画
         this.ctx.drawImage(
-            this.currentImage, 
-            this.imageOffsetX, 
-            this.imageOffsetY, 
-            this.displayedWidth, 
+            this.currentImage,
+            this.imageOffsetX,
+            this.imageOffsetY,
+            this.displayedWidth,
             this.displayedHeight
         );
-        
+
         // 画像境界線
         this.ctx.strokeStyle = '#6c757d';
         this.ctx.lineWidth = 1;
         this.ctx.strokeRect(
-            this.imageOffsetX - 0.5, 
-            this.imageOffsetY - 0.5, 
-            this.displayedWidth + 1, 
+            this.imageOffsetX - 0.5,
+            this.imageOffsetY - 0.5,
+            this.displayedWidth + 1,
             this.displayedHeight + 1
         );
     },

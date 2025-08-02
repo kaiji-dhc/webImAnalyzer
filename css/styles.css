@@ -140,6 +140,10 @@ body {
     cursor: crosshair !important;
 }
 
+.panning {
+    cursor: move !important;
+}
+
 /* ステータス表示 */
 .status {
     position: absolute;
@@ -150,6 +154,24 @@ body {
     padding: 5px 10px;
     border-radius: 15px;
     font-size: 0.8rem;
+}
+
+/* リセットボタン */
+.reset-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.reset-button:hover {
+    background: #5a67d8;
 }
 
 /* ========================================

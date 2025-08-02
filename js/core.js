@@ -44,6 +44,17 @@ class ImageAnalyzer {
         this.imageOffsetX = 0;
         this.imageOffsetY = 0;
         this.imageMargin = 20;
+        this.baseScale = 1;
+        this.zoom = 1;
+        this.minZoom = 0.5;
+        this.maxZoom = 5;
+        this.panX = 0;
+        this.panY = 0;
+        this.isPanning = false;
+        this.panStartX = 0;
+        this.panStartY = 0;
+        this.viewWidth = 0;
+        this.viewHeight = 0;
         
         // 描画関連
         this.isDrawing = false;
@@ -151,6 +162,8 @@ class ImageAnalyzer {
             // UI要素のリセット
             this.canvas.classList.add('hidden');
             this.dropZone.classList.remove('hidden');
+            const resetBtn = document.getElementById('resetView');
+            if (resetBtn) resetBtn.classList.add('hidden');
             
             // ステータス表示
             this.setStatusMessage('アプリケーションをリセットしました');

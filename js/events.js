@@ -113,29 +113,59 @@ Object.assign(ImageAnalyzer.prototype, {
     initCanvasEvents() {
         if (!this.canvas) return;
 
-        // マウスダウン - 矩形描画開始
+        // マウスダウン - 描画またはパン開始
         this.canvas.addEventListener('mousedown', (e) => {
-            this.startDrawing(e);
+            if (e.button === 0) {
+                this.startDrawing(e);
+            } else if (e.button === 1 || e.button === 2) {
+                e.preventDefault();
+                this.startPan(e);
+            }
         });
 
-        // マウスムーブ - 矩形描画・カーソル情報更新
+        // マウスムーブ - 描画・パン・カーソル情報更新
         this.canvas.addEventListener('mousemove', (e) => {
-            this.drawRectangle(e);
-            this.updateCursorInfo(e);
+            if (this.isPanning) {
+                e.preventDefault();
+                this.panImage(e);
+            } else {
+                this.drawRectangle(e);
+                this.updateCursorInfo(e);
+            }
         });
 
-        // マウスアップ - 矩形描画終了
+        // マウスアップ - 操作終了
         this.canvas.addEventListener('mouseup', (e) => {
-            this.endDrawing(e);
+            if (this.isPanning) {
+                this.endPan();
+            } else {
+                this.endDrawing(e);
+            }
         });
 
-        // マウスリーブ - 描画中止・カーソル情報クリア
+        // マウスリーブ - 操作中止・カーソル情報クリア
         this.canvas.addEventListener('mouseleave', (e) => {
+            if (this.isPanning) {
+                this.endPan();
+            }
             if (this.isDrawing) {
                 this.endDrawing(e);
             }
             this.clearCursorInfo();
         });
+
+        // ホイール - ズーム
+        this.canvas.addEventListener('wheel', (e) => {
+            this.handleWheel(e);
+        }, { passive: false });
+
+        // リセットボタン - 表示位置の初期化
+        const resetBtn = document.getElementById('resetView');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                this.resetView();
+            });
+        }
 
         // コンテキストメニュー無効化
         this.canvas.addEventListener('contextmenu', (e) => {
