@@ -182,6 +182,9 @@ class LineGraph {
         const width = baseWidth * this.largeZoom;
         this.largeCanvas.width = width;
         const height = this.largeCanvas.height;
+        const padding = { top: 20, bottom: 60, left: 40, right: 20 };
+        const plotWidth = width - padding.left - padding.right;
+        const plotHeight = height - padding.top - padding.bottom;
         this.largeCtx.clearRect(0, 0, width, height);
         const maxVal = 255;
         const step = Math.max(1, Math.floor(5 / this.largeZoom));
@@ -190,18 +193,18 @@ class LineGraph {
         this.largeCtx.strokeStyle = '#dee2e6';
         this.largeCtx.lineWidth = 1;
         this.largeCtx.beginPath();
-        this.largeCtx.moveTo(0, 0);
-        this.largeCtx.lineTo(0, height);
-        this.largeCtx.lineTo(width, height);
+        this.largeCtx.moveTo(padding.left, padding.top);
+        this.largeCtx.lineTo(padding.left, height - padding.bottom);
+        this.largeCtx.lineTo(width - padding.right, height - padding.bottom);
         this.largeCtx.stroke();
 
         // 軸ラベル
         this.largeCtx.fillStyle = '#495057';
         this.largeCtx.font = '12px sans-serif';
         this.largeCtx.textAlign = 'center';
-        this.largeCtx.fillText('距離(px)', width / 2, height - 4);
+        this.largeCtx.fillText('距離(px)', padding.left + plotWidth / 2, height - padding.bottom + 35);
         this.largeCtx.save();
-        this.largeCtx.translate(12, height / 2);
+        this.largeCtx.translate(15, padding.top + plotHeight / 2);
         this.largeCtx.rotate(-Math.PI / 2);
         this.largeCtx.fillText('画素値', 0, 0);
         this.largeCtx.restore();
@@ -211,8 +214,8 @@ class LineGraph {
         const drawChannel = (data, color) => {
             this.largeCtx.beginPath();
             data.forEach((v, i) => {
-                const x = (i / (len - 1)) * width;
-                const y = height - (v / maxVal) * height;
+                const x = padding.left + (i / (len - 1)) * plotWidth;
+                const y = padding.top + (1 - v / maxVal) * plotHeight;
                 if (i === 0) this.largeCtx.moveTo(x, y);
                 else this.largeCtx.lineTo(x, y);
             });
@@ -222,17 +225,17 @@ class LineGraph {
 
             this.largeCtx.font = '10px sans-serif';
             for (let i = 0; i < len; i += step) {
-                const x = (i / (len - 1)) * width;
-                const y = height - (data[i] / maxVal) * height;
+                const x = padding.left + (i / (len - 1)) * plotWidth;
+                const y = padding.top + (1 - data[i] / maxVal) * plotHeight;
                 this.largeCtx.fillStyle = color;
                 this.largeCtx.beginPath();
                 this.largeCtx.arc(x, y, 2, 0, Math.PI * 2);
                 this.largeCtx.fill();
-                this.largeCtx.fillText(data[i], x + 2, y - 2);
+                this.largeCtx.fillText(data[i], x + 2, y - 4);
 
                 this.largeCtx.fillStyle = '#495057';
                 this.largeCtx.textAlign = 'center';
-                this.largeCtx.fillText(i, x, height - 6);
+                this.largeCtx.fillText(i, x, height - padding.bottom + 15);
                 this.largeCtx.textAlign = 'left';
             }
         };
