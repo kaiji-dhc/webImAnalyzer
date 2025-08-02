@@ -122,10 +122,21 @@ class LineGraph {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas?.getContext('2d');
+        this.mode = 'brightness';
+        this.largeCanvas = document.getElementById('lineProfileChartLarge');
+        this.largeCtx = this.largeCanvas?.getContext('2d');
+        this.largeZoom = 1;
+        this.currentValues = null;
+        this.initPanZoom();
+    }
+
+    setMode(mode) {
+        this.mode = mode;
     }
 
     draw(values) {
         if (!this.ctx || !values) return;
+        this.currentValues = values;
         const ctx = this.ctx;
         const width = this.canvas.width;
         const height = this.canvas.height;
@@ -147,54 +158,111 @@ class LineGraph {
             ctx.stroke();
         };
 
-        drawChannel(values.r, 'red');
-        drawChannel(values.g, 'green');
-        drawChannel(values.b, 'blue');
-        drawChannel(values.brightness, 'black');
+        const channels = {
+            brightness: [{ key: 'brightness', color: 'black' }],
+            red: [{ key: 'r', color: 'red' }],
+            green: [{ key: 'g', color: 'green' }],
+            blue: [{ key: 'b', color: 'blue' }],
+            'rgb-overlay': [
+                { key: 'r', color: 'red' },
+                { key: 'g', color: 'green' },
+                { key: 'b', color: 'blue' }
+            ]
+        };
+        (channels[this.mode] || channels.brightness).forEach(ch =>
+            drawChannel(values[ch.key], ch.color)
+        );
     }
 
     drawLarge(values) {
-        const canvas = document.getElementById('lineProfileChartLarge');
-        const ctx = canvas?.getContext('2d');
-        if (!ctx || !values) return;
-
+        if (!this.largeCtx || !values) return;
+        this.currentValues = values;
         const len = values.brightness.length;
-        const width = Math.max(len * 5, 500);
-        canvas.width = width;
-        const height = canvas.height;
-        ctx.clearRect(0, 0, width, height);
+        const baseWidth = Math.max(len * 5, 500);
+        const width = baseWidth * this.largeZoom;
+        this.largeCanvas.width = width;
+        const height = this.largeCanvas.height;
+        this.largeCtx.clearRect(0, 0, width, height);
         const maxVal = 255;
 
-        const drawChannel = (data, color, annotate = false) => {
-            ctx.beginPath();
+        const drawChannel = (data, color) => {
+            this.largeCtx.beginPath();
             data.forEach((v, i) => {
                 const x = (i / (len - 1)) * width;
                 const y = height - (v / maxVal) * height;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                if (i === 0) this.largeCtx.moveTo(x, y);
+                else this.largeCtx.lineTo(x, y);
             });
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1;
-            ctx.stroke();
+            this.largeCtx.strokeStyle = color;
+            this.largeCtx.lineWidth = 1;
+            this.largeCtx.stroke();
 
-            if (annotate) {
-                ctx.fillStyle = color;
-                ctx.font = '10px sans-serif';
-                for (let i = 0; i < len; i += 5) {
-                    const x = (i / (len - 1)) * width;
-                    const y = height - (data[i] / maxVal) * height;
-                    ctx.beginPath();
-                    ctx.arc(x, y, 2, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillText(data[i], x + 2, y - 2);
-                }
+            this.largeCtx.fillStyle = color;
+            this.largeCtx.font = '10px sans-serif';
+            for (let i = 0; i < len; i += 5) {
+                const x = (i / (len - 1)) * width;
+                const y = height - (data[i] / maxVal) * height;
+                this.largeCtx.beginPath();
+                this.largeCtx.arc(x, y, 2, 0, Math.PI * 2);
+                this.largeCtx.fill();
+                this.largeCtx.fillText(data[i], x + 2, y - 2);
             }
         };
 
-        drawChannel(values.r, 'red');
-        drawChannel(values.g, 'green');
-        drawChannel(values.b, 'blue');
-        drawChannel(values.brightness, 'black', true);
+        const channels = {
+            brightness: [{ key: 'brightness', color: 'black' }],
+            red: [{ key: 'r', color: 'red' }],
+            green: [{ key: 'g', color: 'green' }],
+            blue: [{ key: 'b', color: 'blue' }],
+            'rgb-overlay': [
+                { key: 'r', color: 'red' },
+                { key: 'g', color: 'green' },
+                { key: 'b', color: 'blue' }
+            ]
+        };
+        (channels[this.mode] || channels.brightness).forEach(ch =>
+            drawChannel(values[ch.key], ch.color)
+        );
+    }
+
+    resetView() {
+        this.largeZoom = 1;
+        const container = document.querySelector('#lineProfileModal .histogram-scroll-container');
+        if (container) container.scrollLeft = 0;
+    }
+
+    initPanZoom() {
+        if (!this.largeCanvas) return;
+        const container = document.querySelector('#lineProfileModal .histogram-scroll-container');
+        if (!container) return;
+        let isPanning = false;
+        let startX = 0;
+        let scrollStart = 0;
+
+        this.largeCanvas.addEventListener('mousedown', (e) => {
+            isPanning = true;
+            startX = e.clientX;
+            scrollStart = container.scrollLeft;
+            this.largeCanvas.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            const dx = e.clientX - startX;
+            container.scrollLeft = scrollStart - dx;
+        });
+
+        window.addEventListener('mouseup', () => {
+            isPanning = false;
+            this.largeCanvas.style.cursor = 'default';
+        });
+
+        this.largeCanvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+            this.largeZoom = Math.min(Math.max(this.largeZoom * zoomFactor, 1), 20);
+            this.drawLarge(this.currentValues);
+        });
     }
 }
 
@@ -212,6 +280,21 @@ class LineAnalyzer {
                 if (this.lastValues) {
                     this.openModal();
                 }
+            });
+        }
+
+        const modeButtons = document.querySelectorAll('.line-profile-mode-selector .mode-btn');
+        if (modeButtons.length > 0) {
+            modeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modeButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    this.graph.setMode(btn.dataset.mode);
+                    if (this.lastValues) {
+                        this.graph.draw(this.lastValues);
+                        this.graph.drawLarge(this.lastValues);
+                    }
+                });
             });
         }
     }
@@ -244,10 +327,6 @@ class LineAnalyzer {
             const peaks = PeakDetector.findPeaks(values.brightness);
             this.displayPeaks(peaks);
         }
-        this.imageAnalyzer.drawMode = 'rect';
-        if (this.imageAnalyzer.updateModeButtons) {
-            this.imageAnalyzer.updateModeButtons('rect');
-        }
     }
 
     displayPeaks(peaks) {
@@ -264,6 +343,7 @@ class LineAnalyzer {
         const modal = document.getElementById('lineProfileModal');
         if (!modal || !this.lastValues) return;
         modal.style.display = 'flex';
+        this.graph.resetView();
         this.graph.drawLarge(this.lastValues);
     }
 

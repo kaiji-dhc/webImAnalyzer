@@ -161,6 +161,13 @@
 
                 <div class="panel">
                     <h3>ラインプロファイル</h3>
+                    <div class="histogram-mode-selector line-profile-mode-selector">
+                        <button class="mode-btn active" data-mode="brightness">輝度</button>
+                        <button class="mode-btn" data-mode="red">R</button>
+                        <button class="mode-btn" data-mode="green">G</button>
+                        <button class="mode-btn" data-mode="blue">B</button>
+                        <button class="mode-btn" data-mode="rgb-overlay">RGB重畳</button>
+                    </div>
                     <div class="histogram-container" style="height:180px;">
                         <canvas id="lineProfileChart" width="300" height="150"></canvas>
                     </div>
