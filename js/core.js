@@ -151,6 +151,9 @@ class ImageAnalyzer {
             this.isDrawing = false;
             this.currentRect = null;
             this.drawMode = 'rect';
+            if (this.updateModeButtons) {
+                this.updateModeButtons('rect');
+            }
             
             // 解析データのリセット
             this.isAnalyzing = false;
@@ -165,6 +168,8 @@ class ImageAnalyzer {
                 if (this.lineAnalyzer.peakInfo) {
                     this.lineAnalyzer.peakInfo.textContent = 'ピークなし';
                 }
+                this.lineAnalyzer.lastValues = null;
+                this.lineAnalyzer.closeModal && this.lineAnalyzer.closeModal();
             }
             
             // ステータス表示

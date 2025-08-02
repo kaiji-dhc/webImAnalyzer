@@ -25,6 +25,11 @@
                     </ul>
                 </div>
 
+                <div class="draw-mode-selector">
+                    <button id="roiModeBtn" class="mode-btn active">Roi</button>
+                    <button id="lineModeBtn" class="mode-btn">Line</button>
+                </div>
+
                 <div id="dropZone" class="drop-zone">
                     <p>📁 画像ファイルをここにドロップ</p>
                     <small>または、クリックしてファイルを選択 (JPG, PNG, BMP, TIFF, WebP, GIF対応)</small>
@@ -156,7 +161,6 @@
 
                 <div class="panel">
                     <h3>ラインプロファイル</h3>
-                    <button id="lineProfileBtn" class="param-button primary" style="margin-bottom:10px;">ライン測定</button>
                     <div class="histogram-container" style="height:180px;">
                         <canvas id="lineProfileChart" width="300" height="150"></canvas>
                     </div>
@@ -179,6 +183,18 @@
             </div>
             <div id="histogramInfo" class="histogram-info">
                 <!-- JavaScript で動的に生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ラインプロファイル拡大モーダル -->
+    <div id="lineProfileModal" class="histogram-modal">
+        <div class="histogram-modal-content">
+            <button class="histogram-close" onclick="closeLineProfileModal()">&times;</button>
+            <h3>ラインプロファイル詳細表示</h3>
+            <p class="histogram-modal-help">💡 横スクロールで詳細を確認できます</p>
+            <div class="histogram-scroll-container">
+                <canvas id="lineProfileChartLarge" height="400"></canvas>
             </div>
         </div>
     </div>

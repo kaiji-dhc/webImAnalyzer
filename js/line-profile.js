@@ -152,6 +152,50 @@ class LineGraph {
         drawChannel(values.b, 'blue');
         drawChannel(values.brightness, 'black');
     }
+
+    drawLarge(values) {
+        const canvas = document.getElementById('lineProfileChartLarge');
+        const ctx = canvas?.getContext('2d');
+        if (!ctx || !values) return;
+
+        const len = values.brightness.length;
+        const width = Math.max(len * 5, 500);
+        canvas.width = width;
+        const height = canvas.height;
+        ctx.clearRect(0, 0, width, height);
+        const maxVal = 255;
+
+        const drawChannel = (data, color, annotate = false) => {
+            ctx.beginPath();
+            data.forEach((v, i) => {
+                const x = (i / (len - 1)) * width;
+                const y = height - (v / maxVal) * height;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            if (annotate) {
+                ctx.fillStyle = color;
+                ctx.font = '10px sans-serif';
+                for (let i = 0; i < len; i += 5) {
+                    const x = (i / (len - 1)) * width;
+                    const y = height - (data[i] / maxVal) * height;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillText(data[i], x + 2, y - 2);
+                }
+            }
+        };
+
+        drawChannel(values.r, 'red');
+        drawChannel(values.g, 'green');
+        drawChannel(values.b, 'blue');
+        drawChannel(values.brightness, 'black', true);
+    }
 }
 
 class LineAnalyzer {
@@ -160,9 +204,15 @@ class LineAnalyzer {
         this.drawer = new LineDrawer(imageAnalyzer);
         this.graph = new LineGraph(document.getElementById('lineProfileChart'));
         this.peakInfo = document.getElementById('peakInfo');
-        const btn = document.getElementById('lineProfileBtn');
-        if (btn) {
-            btn.addEventListener('click', () => this.activate());
+        this.lastValues = null;
+
+        const chart = document.getElementById('lineProfileChart');
+        if (chart) {
+            chart.addEventListener('click', () => {
+                if (this.lastValues) {
+                    this.openModal();
+                }
+            });
         }
     }
 
@@ -189,11 +239,15 @@ class LineAnalyzer {
         if (!line) return;
         const values = PixelSampler.sample(this.imageAnalyzer, line.start, line.end);
         if (values) {
+            this.lastValues = values;
             this.graph.draw(values);
             const peaks = PeakDetector.findPeaks(values.brightness);
             this.displayPeaks(peaks);
         }
         this.imageAnalyzer.drawMode = 'rect';
+        if (this.imageAnalyzer.updateModeButtons) {
+            this.imageAnalyzer.updateModeButtons('rect');
+        }
     }
 
     displayPeaks(peaks) {
@@ -204,5 +258,19 @@ class LineAnalyzer {
         }
         const text = peaks.map(p => `(${p.index}, ${p.value})`).join(', ');
         this.peakInfo.textContent = `ピーク: ${text}`;
+    }
+
+    openModal() {
+        const modal = document.getElementById('lineProfileModal');
+        if (!modal || !this.lastValues) return;
+        modal.style.display = 'flex';
+        this.graph.drawLarge(this.lastValues);
+    }
+
+    closeModal() {
+        const modal = document.getElementById('lineProfileModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 }

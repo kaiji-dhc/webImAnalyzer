@@ -24,7 +24,10 @@ Object.assign(ImageAnalyzer.prototype, {
         
         // Canvas操作イベント
         this.initCanvasEvents();
-        
+
+        // 描画モード切り替えボタン
+        this.initModeButtons();
+
         // ウィンドウイベント
         this.initWindowEvents();
         
@@ -108,6 +111,44 @@ Object.assign(ImageAnalyzer.prototype, {
     },
 
     /**
+     * 描画モード切り替えボタンの初期化
+     */
+    initModeButtons() {
+        const roiBtn = document.getElementById('roiModeBtn');
+        const lineBtn = document.getElementById('lineModeBtn');
+        if (!roiBtn || !lineBtn) return;
+
+        roiBtn.addEventListener('click', () => {
+            this.drawMode = 'rect';
+            this.updateModeButtons('rect');
+            this.setStatusMessage('矩形モード');
+        });
+
+        lineBtn.addEventListener('click', () => {
+            if (!this.lineAnalyzer) return;
+            this.lineAnalyzer.activate();
+            this.updateModeButtons('line');
+        });
+    },
+
+    /**
+     * 描画モードボタンの状態更新
+     */
+    updateModeButtons(mode) {
+        const roiBtn = document.getElementById('roiModeBtn');
+        const lineBtn = document.getElementById('lineModeBtn');
+        if (!roiBtn || !lineBtn) return;
+
+        if (mode === 'line') {
+            lineBtn.classList.add('active');
+            roiBtn.classList.remove('active');
+        } else {
+            roiBtn.classList.add('active');
+            lineBtn.classList.remove('active');
+        }
+    },
+
+    /**
      * Canvas操作イベントの初期化
      */
     initCanvasEvents() {
@@ -175,6 +216,11 @@ Object.assign(ImageAnalyzer.prototype, {
         // キーボードイベント（ESCキーでモーダル閉じる）
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                const lineModal = document.getElementById('lineProfileModal');
+                if (lineModal && lineModal.style.display === 'flex') {
+                    if (this.lineAnalyzer) this.lineAnalyzer.closeModal();
+                    return;
+                }
                 const modal = document.getElementById('histogramModal');
                 if (modal && modal.style.display === 'flex') {
                     this.closeHistogramModal();
@@ -188,6 +234,14 @@ Object.assign(ImageAnalyzer.prototype, {
             modal.addEventListener('click', (e) => {
                 if (e.target.id === 'histogramModal') {
                     this.closeHistogramModal();
+                }
+            });
+        }
+        const lineModal = document.getElementById('lineProfileModal');
+        if (lineModal) {
+            lineModal.addEventListener('click', (e) => {
+                if (e.target.id === 'lineProfileModal' && this.lineAnalyzer) {
+                    this.lineAnalyzer.closeModal();
                 }
             });
         }
