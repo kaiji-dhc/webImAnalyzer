@@ -142,7 +142,11 @@ class LineGraph {
         const height = this.canvas.height;
         ctx.clearRect(0, 0, width, height);
         const len = values.brightness.length;
-        if (len === 0) return;
+        // When only one point is present, drawing a line causes division by zero
+        // in the position calculations. In that case simply skip drawing.
+        if (len <= 1) {
+            return;
+        }
         const maxVal = 255;
 
         const drawChannel = (data, color) => {
@@ -210,6 +214,11 @@ class LineGraph {
         this.largeCtx.restore();
 
         this.largeCtx.textAlign = 'left';
+
+        // Avoid divide by zero when the sampled line has only one pixel
+        if (len <= 1) {
+            return;
+        }
 
         const drawChannel = (data, color) => {
             this.largeCtx.beginPath();
