@@ -380,36 +380,36 @@ Object.assign(ImageAnalyzer.prototype, {
     /**
      * ヒストグラムのスケール描画
      * @param {CanvasRenderingContext2D} ctx - Canvas コンテキスト
+     * @param {boolean} [isLarge=false] - 大きな表示かどうか
      */
-    drawHistogramScale(ctx) {
+    drawHistogramScale(ctx, isLarge = false) {
+        const params = this.getHistogramParams(isLarge);
+
         ctx.fillStyle = '#6c757d';
-        ctx.font = '7px Arial';
+        ctx.font = isLarge ? '9px Arial' : '6px Arial';
         ctx.textAlign = 'center';
-        
-        const xMarks = [0, 50, 100, 150, 200, 255];
-        xMarks.forEach(value => {
-            const x = 50 + (value / 255) * 230;
-            ctx.fillText(value.toString(), x, 175);
-            
+
+        for (let value = 0; value <= 255; value += 5) {
+            const x = params.leftMargin + (value / 255) * params.chartWidth;
+            const isMajor = value % 50 === 0;
+
             // 目盛り線
             ctx.strokeStyle = '#dee2e6';
-            ctx.lineWidth = value === 0 || value === 255 ? 1.5 : 1;
+            ctx.lineWidth = isMajor ? 1 : 0.5;
             ctx.beginPath();
-            ctx.moveTo(x, 160);
-            ctx.lineTo(x, value === 0 || value === 255 ? 170 : 165);
+            ctx.moveTo(x, params.bottomY);
+            ctx.lineTo(x, params.bottomY + (isMajor ? 10 : 5));
             ctx.stroke();
-        });
 
-        // 細かい目盛り
-        ctx.strokeStyle = '#e9ecef';
-        ctx.lineWidth = 0.5;
-        for (let i = 25; i < 255; i += 25) {
-            if (i % 50 !== 0) {
-                const x = 50 + (i / 255) * 230;
-                ctx.beginPath();
-                ctx.moveTo(x, 160);
-                ctx.lineTo(x, 163);
-                ctx.stroke();
+            // ラベル描画（小さい表示は縦向き）
+            if (isLarge) {
+                ctx.fillText(value.toString(), x, params.bottomY + (isMajor ? 20 : 15));
+            } else {
+                ctx.save();
+                ctx.translate(x, params.bottomY + (isMajor ? 18 : 13));
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText(value.toString(), 0, 0);
+                ctx.restore();
             }
         }
     },
@@ -489,9 +489,7 @@ Object.assign(ImageAnalyzer.prototype, {
         
         this.drawHistogramGrid(ctx, params, maxValue, isLarge);
         
-        if (isLarge) {
-            this.drawHistogramStatistics(ctx, params, histogram, channel, maxValue);
-        }
+        // 大きな表示では統計情報は別パネルで表示する
     },
 
     /**
@@ -539,10 +537,6 @@ Object.assign(ImageAnalyzer.prototype, {
         });
         
         this.drawHistogramGrid(ctx, params, maxValue, isLarge);
-        
-        if (isLarge) {
-            this.drawRGBOverlayStatistics(ctx, params, histogramData);
-        }
     },
 
     /**
@@ -612,114 +606,7 @@ Object.assign(ImageAnalyzer.prototype, {
         }
     },
 
-    /**
-     * ヒストグラム統計情報の描画
-     * @param {CanvasRenderingContext2D} ctx - Canvas コンテキスト
-     * @param {Object} params - パラメータ
-     * @param {Array} histogram - ヒストグラムデータ
-     * @param {string} channel - チャンネル名
-     * @param {number} maxValue - 最大値
-     */
-    drawHistogramStatistics(ctx, params, histogram, channel, maxValue) {
-        const stats = this.calculateHistogramStatistics(histogram);
-        if (!stats) return;
-        
-        const channelNames = {
-            brightness: '輝度',
-            red: '赤チャンネル',
-            green: '緑チャンネル',
-            blue: '青チャンネル'
-        };
-        
-        // 統計情報ボックス
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.fillRect(params.leftMargin + 10, params.topMargin + 10, 280, 140);
-        ctx.fillStyle = 'white';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'left';
-        
-        // ヘッダー
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 13px Arial';
-        ctx.fillText(`📊 ${channelNames[channel]} 統計情報`, params.leftMargin + 20, params.topMargin + 30);
-        
-        // 統計値
-        ctx.font = '11px Arial';
-        ctx.fillStyle = '#fff';
-        const textLines = [
-            `総画素数: ${stats.totalPixels.toLocaleString()}`,
-            `平均値: ${stats.mean.toFixed(2)}`,
-            `中央値: ${stats.median}`,
-            `最頻値: ${stats.mode} (${stats.maxValue.toLocaleString()}画素)`,
-            `標準偏差: ${stats.stdDev.toFixed(2)}`,
-            `値範囲: ${stats.minValue} - ${stats.maxValueIndex}`
-        ];
-        
-        textLines.forEach((line, index) => {
-            ctx.fillText(line, params.leftMargin + 20, params.topMargin + 50 + (index * 20));
-        });
-    },
-
-    /**
-     * RGB重畳統計情報の描画
-     * @param {CanvasRenderingContext2D} ctx - Canvas コンテキスト
-     * @param {Object} params - パラメータ
-     * @param {Object} histogramData - ヒストグラムデータ
-     */
-    drawRGBOverlayStatistics(ctx, params, histogramData) {
-        const channels = ['red', 'green', 'blue'];
-        const channelStats = {};
-        
-        channels.forEach(channel => {
-            channelStats[channel] = this.calculateHistogramStatistics(histogramData[channel]);
-        });
-        
-        // 統計情報ボックス
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-        ctx.fillRect(params.leftMargin + 10, params.topMargin + 10, 400, 160);
-        
-        // ヘッダー
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 13px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText('📊 RGB重畳表示 - 詳細統計', params.leftMargin + 20, params.topMargin + 30);
-        
-        const channelColors = {
-            red: '#ff6b6b',
-            green: '#51cf66', 
-            blue: '#339af0'
-        };
-        
-        const channelNames = {
-            red: 'R',
-            green: 'G',
-            blue: 'B'
-        };
-        
-        let yOffset = 50;
-        channels.forEach((channel) => {
-            const stats = channelStats[channel];
-            if (!stats) return;
-            
-            const color = channelColors[channel];
-            const name = channelNames[channel];
-            
-            // チャンネル名
-            ctx.fillStyle = color;
-            ctx.font = 'bold 11px Arial';
-            ctx.fillText(`${name}チャンネル:`, params.leftMargin + 20, params.topMargin + yOffset);
-            
-            // 統計値
-            ctx.fillStyle = 'white';
-            ctx.font = '10px Arial';
-            ctx.fillText(`平均: ${stats.mean.toFixed(1)}`, params.leftMargin + 80, params.topMargin + yOffset);
-            ctx.fillText(`中央値: ${stats.median}`, params.leftMargin + 150, params.topMargin + yOffset);
-            ctx.fillText(`最頻値: ${stats.mode}`, params.leftMargin + 210, params.topMargin + yOffset);
-            ctx.fillText(`最大: ${stats.maxValue.toLocaleString()}px`, params.leftMargin + 270, params.topMargin + yOffset);
-            
-            yOffset += 20;
-        });
-    },
+    // 旧ヒストグラム統計情報描画関数は、HTML側で統計を表示するために廃止
 
     /**
      * 大きなヒストグラム用の空描画
@@ -753,6 +640,8 @@ Object.assign(ImageAnalyzer.prototype, {
         ctx.font = '14px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(`${channelNames[channel]} (0-255) 全256段階表示`, 1020, 385);
+
+        this.drawHistogramScale(ctx, true);
     },
 
     /**

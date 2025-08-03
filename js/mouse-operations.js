@@ -11,7 +11,7 @@ Object.assign(ImageAnalyzer.prototype, {
      */
     startDrawing(e) {
         if (!this.currentImage) return;
-        
+
         this.isDrawing = true;
         const rect = this.canvas.getBoundingClientRect();
         const scaleX = this.canvas.width / rect.width;
@@ -22,6 +22,80 @@ Object.assign(ImageAnalyzer.prototype, {
         
         this.canvas.classList.add('drawing');
         this.setStatusMessage('矩形を描画中...');
+    },
+
+    /**
+     * パン開始
+     * @param {MouseEvent} e - マウスイベント
+     */
+    startPan(e) {
+        if (!this.currentImage) return;
+
+        e.preventDefault();
+        this.isPanning = true;
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        this.panStartX = (e.clientX - rect.left) * scaleX;
+        this.panStartY = (e.clientY - rect.top) * scaleY;
+
+        this.canvas.classList.add('panning');
+    },
+
+    /**
+     * パン処理
+     * @param {MouseEvent} e - マウスイベント
+     */
+    panImage(e) {
+        if (!this.isPanning) return;
+
+        e.preventDefault();
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        const currentX = (e.clientX - rect.left) * scaleX;
+        const currentY = (e.clientY - rect.top) * scaleY;
+
+        this.panX += currentX - this.panStartX;
+        this.panY += currentY - this.panStartY;
+        this.panStartX = currentX;
+        this.panStartY = currentY;
+
+        this.redrawCanvas();
+    },
+
+    /**
+     * 表示を初期状態にリセット
+     */
+    resetView() {
+        if (!this.currentImage) return;
+        this.zoom = 1;
+        this.panX = 0;
+        this.panY = 0;
+        this.redrawCanvas();
+    },
+
+    /**
+     * パン終了
+     */
+    endPan() {
+        this.isPanning = false;
+        this.canvas.classList.remove('panning');
+    },
+
+    /**
+     * ホイールによるズーム
+     * @param {WheelEvent} e - ホイールイベント
+     */
+    handleWheel(e) {
+        if (!this.currentImage) return;
+        e.preventDefault();
+
+        const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+        this.zoom = Math.min(this.maxZoom, Math.max(this.minZoom, this.zoom * zoomFactor));
+        this.redrawCanvas();
     },
 
     /**

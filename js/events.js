@@ -170,6 +170,7 @@ Object.assign(ImageAnalyzer.prototype, {
                 this.lineAnalyzer.start(e);
             }
             else if (e.button === 1 || e.button === 2) {
+
                 e.preventDefault();
                 this.startPan(e);
             }
@@ -206,25 +207,36 @@ Object.assign(ImageAnalyzer.prototype, {
                     this.lineAnalyzer.end(e);
                 }
             }
-           
         });
 
-        // マウスリーブ - 描画中止・カーソル情報クリア
+        // マウスリーブ - 操作中止・カーソル情報クリア
         this.canvas.addEventListener('mouseleave', (e) => {
+
              if (this.isPanning) {
                 this.endPan();
-            }
-             if (this.isDrawing) {
+             }
+             else if (this.isDrawing) {
                 if (this.drawMode === 'rect') {
-                    if (this.isDrawing) {
-                        this.endDrawing(e);
-                    }
+                    this.endDrawing(e);
                 } else if (this.drawMode === 'line' && this.lineAnalyzer && this.lineAnalyzer.drawer.isDrawing) {
                     this.lineAnalyzer.end(e);
                 }
              }
             this.clearCursorInfo();
         });
+
+        // ホイール - ズーム
+        this.canvas.addEventListener('wheel', (e) => {
+            this.handleWheel(e);
+        }, { passive: false });
+
+        // リセットボタン - 表示位置の初期化
+        const resetBtn = document.getElementById('resetView');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                this.resetView();
+            });
+        }
 
         // コンテキストメニュー無効化
         this.canvas.addEventListener('contextmenu', (e) => {
