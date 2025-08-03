@@ -158,11 +158,11 @@ class ImageAnalyzer {
             // 解析データのリセット
             this.isAnalyzing = false;
             this.currentHistogramData = null;
-            
+
             // UI要素のリセット
             this.canvas.classList.add('hidden');
             this.dropZone.classList.remove('hidden');
-
+           
             if (this.lineAnalyzer) {
                 this.lineAnalyzer.graph.draw({ r: [], g: [], b: [], brightness: [] });
                 if (this.lineAnalyzer.peakInfo) {
@@ -171,6 +171,10 @@ class ImageAnalyzer {
                 this.lineAnalyzer.lastValues = null;
                 this.lineAnalyzer.closeModal && this.lineAnalyzer.closeModal();
             }
+
+             const resetBtn = document.getElementById('resetView');
+            if (resetBtn) resetBtn.classList.add('hidden');
+
             
             // ステータス表示
             this.setStatusMessage('アプリケーションをリセットしました');

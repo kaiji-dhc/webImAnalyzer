@@ -164,41 +164,65 @@ Object.assign(ImageAnalyzer.prototype, {
 
         // マウスダウン
         this.canvas.addEventListener('mousedown', (e) => {
-            if (this.drawMode === 'rect') {
+            if (this.drawMode === 'rect' && e.button === 0) {
                 this.startDrawing(e);
-            } else if (this.drawMode === 'line' && this.lineAnalyzer) {
+            } else if (this.drawMode === 'line' && this.lineAnalyzer && e.button === 0) {
                 this.lineAnalyzer.start(e);
+            }
+            else if (e.button === 1 || e.button === 2) {
+                e.preventDefault();
+                this.startPan(e);
             }
         });
 
         // マウスムーブ
         this.canvas.addEventListener('mousemove', (e) => {
-            if (this.drawMode === 'rect') {
-                this.drawRectangle(e);
-            } else if (this.drawMode === 'line' && this.lineAnalyzer) {
-                this.lineAnalyzer.draw(e);
+            
+             if (this.isPanning) {
+                e.preventDefault();
+                this.panImage(e);
+            } 
+            else{
+                if (this.drawMode === 'rect') {
+                    this.drawRectangle(e);
+                } else if (this.drawMode === 'line' && this.lineAnalyzer) {
+                    this.lineAnalyzer.draw(e);
+                }
+                this.updateCursorInfo(e);
             }
-            this.updateCursorInfo(e);
+
         });
 
         // マウスアップ
         this.canvas.addEventListener('mouseup', (e) => {
-            if (this.drawMode === 'rect') {
-                this.endDrawing(e);
-            } else if (this.drawMode === 'line' && this.lineAnalyzer) {
-                this.lineAnalyzer.end(e);
+            if (this.isPanning) {
+                this.endPan();
+            } 
+            else
+            {
+                if (this.drawMode === 'rect') {
+                    this.endDrawing(e);
+                } else if (this.drawMode === 'line' && this.lineAnalyzer) {
+                    this.lineAnalyzer.end(e);
+                }
             }
+           
         });
 
         // マウスリーブ - 描画中止・カーソル情報クリア
         this.canvas.addEventListener('mouseleave', (e) => {
-            if (this.drawMode === 'rect') {
-                if (this.isDrawing) {
-                    this.endDrawing(e);
-                }
-            } else if (this.drawMode === 'line' && this.lineAnalyzer && this.lineAnalyzer.drawer.isDrawing) {
-                this.lineAnalyzer.end(e);
+             if (this.isPanning) {
+                this.endPan();
             }
+             if (this.isDrawing) {
+                if (this.drawMode === 'rect') {
+                    if (this.isDrawing) {
+                        this.endDrawing(e);
+                    }
+                } else if (this.drawMode === 'line' && this.lineAnalyzer && this.lineAnalyzer.drawer.isDrawing) {
+                    this.lineAnalyzer.end(e);
+                }
+             }
             this.clearCursorInfo();
         });
 
