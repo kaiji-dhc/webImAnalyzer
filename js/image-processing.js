@@ -94,10 +94,18 @@ Object.assign(ImageAnalyzer.prototype, {
         const specificResult = document.getElementById('specificResult');
         if (specificInput) specificInput.value = '';
         if (specificResult) specificResult.textContent = '--';
-        
+
         // ヒストグラムをリセット
         if (this.drawEmptyHistogram) {
             this.drawEmptyHistogram();
+        }
+
+        // ラインプロファイルをリセット
+        if (this.lineAnalyzer) {
+            this.lineAnalyzer.graph.draw({ r: [], g: [], b: [], brightness: [] });
+            if (this.lineAnalyzer.peakInfo) {
+                this.lineAnalyzer.peakInfo.textContent = 'ピークなし';
+            }
         }
     },
 

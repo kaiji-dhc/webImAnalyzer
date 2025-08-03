@@ -26,6 +26,20 @@ function closeHistogramModal() {
 }
 
 /**
+ * ラインプロファイルモーダルを閉じる（グローバル関数）
+ */
+function closeLineProfileModal() {
+    if (imageAnalyzerInstance && imageAnalyzerInstance.lineAnalyzer) {
+        imageAnalyzerInstance.lineAnalyzer.closeModal();
+    } else {
+        const modal = document.getElementById('lineProfileModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+}
+
+/**
  * アプリケーションの初期化
  */
 function initializeApplication() {

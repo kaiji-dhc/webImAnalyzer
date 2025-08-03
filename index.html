@@ -25,6 +25,11 @@
                     </ul>
                 </div>
 
+                <div class="draw-mode-selector">
+                    <button id="roiModeBtn" class="mode-btn active">Roi</button>
+                    <button id="lineModeBtn" class="mode-btn">Line</button>
+                </div>
+
                 <div id="dropZone" class="drop-zone">
                     <p>📁 画像ファイルをここにドロップ</p>
                     <small>または、クリックしてファイルを選択 (JPG, PNG, BMP, TIFF, WebP, GIF対応)</small>
@@ -154,6 +159,21 @@
                         💡 クリックで拡大表示 | マウスでホバー確認
                     </p>
                 </div>
+
+                <div class="panel">
+                    <h3>ラインプロファイル</h3>
+                    <div class="histogram-mode-selector line-profile-mode-selector">
+                        <button class="mode-btn active" data-mode="brightness">輝度</button>
+                        <button class="mode-btn" data-mode="red">R</button>
+                        <button class="mode-btn" data-mode="green">G</button>
+                        <button class="mode-btn" data-mode="blue">B</button>
+                        <button class="mode-btn" data-mode="rgb-overlay">RGB重畳</button>
+                    </div>
+                    <div class="histogram-container" style="height:180px;">
+                        <canvas id="lineProfileChart" width="300" height="150"></canvas>
+                    </div>
+                    <div id="peakInfo" class="peak-info">ピークなし</div>
+                </div>
             </div>
         </div>
     </div>
@@ -175,12 +195,25 @@
         </div>
     </div>
 
+    <!-- ラインプロファイル拡大モーダル -->
+    <div id="lineProfileModal" class="histogram-modal">
+        <div class="histogram-modal-content">
+            <button class="histogram-close" onclick="closeLineProfileModal()">&times;</button>
+            <h3>ラインプロファイル詳細表示</h3>
+            <p class="histogram-modal-help">💡 横スクロールで詳細を確認できます</p>
+            <div class="histogram-scroll-container">
+                <canvas id="lineProfileChartLarge" height="480"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript ファイルの読み込み -->
     <script src="js/core.js"></script>
     <script src="js/image-processing.js"></script>
     <script src="js/mouse-operations.js"></script>
     <script src="js/analysis.js"></script>
     <script src="js/histogram.js"></script>
+    <script src="js/line-profile.js"></script>
     <script src="js/events.js"></script>
     <script src="js/ui-controls.js"></script>
     <script src="js/main.js"></script>

@@ -198,7 +198,7 @@ Object.assign(ImageAnalyzer.prototype, {
         this.currentHistogramMode = mode;
         
         // モードボタンの更新
-        const modeButtons = document.querySelectorAll('.mode-btn');
+        const modeButtons = document.querySelectorAll('.histogram-mode-selector .mode-btn');
         modeButtons.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === mode);
         });
@@ -216,7 +216,7 @@ Object.assign(ImageAnalyzer.prototype, {
     setUIEnabled(enabled) {
         try {
             // ヒストグラムモードボタン
-            const modeButtons = document.querySelectorAll('.mode-btn');
+            const modeButtons = document.querySelectorAll('.histogram-mode-selector .mode-btn');
             modeButtons.forEach(btn => {
                 btn.disabled = !enabled;
             });

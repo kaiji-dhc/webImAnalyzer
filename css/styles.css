@@ -448,6 +448,19 @@ body {
     flex-wrap: wrap;
 }
 
+.draw-mode-selector {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.line-profile-mode-selector {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
 .mode-btn {
     padding: 6px 12px;
     border: 1px solid #dee2e6;
@@ -531,6 +544,27 @@ body {
     font-size: 0.8rem;
     color: #6c757d;
     margin-top: 5px;
+}
+
+/* ラインプロファイル */
+#lineProfileChart {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#lineProfileChart:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.peak-info {
+    margin-top: 8px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #495057;
 }
 
 .histogram-tooltip {

@@ -75,7 +75,7 @@ Object.assign(ImageAnalyzer.prototype, {
      * ヒストグラム制御の初期化
      */
     initHistogramControls() {
-        const modeButtons = document.querySelectorAll('.mode-btn');
+        const modeButtons = document.querySelectorAll('.histogram-mode-selector .mode-btn');
         
         modeButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -420,7 +420,8 @@ Object.assign(ImageAnalyzer.prototype, {
     safeUpdateHistogram() {
         try {
             if (!this.currentHistogramData || this.isAnalyzing) return;
-            
+            if (this.drawMode === 'line') return;
+
             const mode = this.currentHistogramMode;
             
             if (mode === 'rgb-overlay') {
@@ -725,7 +726,7 @@ Object.assign(ImageAnalyzer.prototype, {
      * レガシー互換性関数
      */
     updateHistogramDisplay() {
-        if (!this.isAnalyzing) {
+        if (!this.isAnalyzing && this.drawMode !== 'line') {
             setTimeout(() => {
                 this.safeUpdateHistogram();
             }, 10);

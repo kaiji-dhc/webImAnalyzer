@@ -24,7 +24,10 @@ Object.assign(ImageAnalyzer.prototype, {
         
         // Canvas操作イベント
         this.initCanvasEvents();
-        
+
+        // 描画モード切り替えボタン
+        this.initModeButtons();
+
         // ウィンドウイベント
         this.initWindowEvents();
         
@@ -108,49 +111,117 @@ Object.assign(ImageAnalyzer.prototype, {
     },
 
     /**
+     * 描画モード切り替えボタンの初期化
+     */
+    initModeButtons() {
+        const roiBtn = document.getElementById('roiModeBtn');
+        const lineBtn = document.getElementById('lineModeBtn');
+        if (!roiBtn || !lineBtn) return;
+
+        roiBtn.addEventListener('click', () => {
+            this.drawMode = 'rect';
+            this.updateModeButtons('rect');
+            this.setStatusMessage('矩形モード');
+            if (this.currentRect) {
+                this.redrawCanvas();
+                const r = this.currentRect;
+                this.drawSelectionRectangle(r.x, r.y, r.x + r.width, r.y + r.height);
+            }
+            if (this.currentHistogramData) {
+                setTimeout(() => this.safeUpdateHistogram(), 10);
+            }
+        });
+
+        lineBtn.addEventListener('click', () => {
+            if (!this.lineAnalyzer) return;
+            this.lineAnalyzer.activate();
+            this.updateModeButtons('line');
+        });
+    },
+
+    /**
+     * 描画モードボタンの状態更新
+     */
+    updateModeButtons(mode) {
+        const roiBtn = document.getElementById('roiModeBtn');
+        const lineBtn = document.getElementById('lineModeBtn');
+        if (!roiBtn || !lineBtn) return;
+
+        if (mode === 'line') {
+            lineBtn.classList.add('active');
+            roiBtn.classList.remove('active');
+        } else {
+            roiBtn.classList.add('active');
+            lineBtn.classList.remove('active');
+        }
+    },
+
+    /**
      * Canvas操作イベントの初期化
      */
     initCanvasEvents() {
         if (!this.canvas) return;
 
-        // マウスダウン - 描画またはパン開始
+        // マウスダウン
         this.canvas.addEventListener('mousedown', (e) => {
-            if (e.button === 0) {
+            if (this.drawMode === 'rect' && e.button === 0) {
                 this.startDrawing(e);
-            } else if (e.button === 1 || e.button === 2) {
+            } else if (this.drawMode === 'line' && this.lineAnalyzer && e.button === 0) {
+                this.lineAnalyzer.start(e);
+            }
+            else if (e.button === 1 || e.button === 2) {
+
                 e.preventDefault();
                 this.startPan(e);
             }
         });
 
-        // マウスムーブ - 描画・パン・カーソル情報更新
+        // マウスムーブ
         this.canvas.addEventListener('mousemove', (e) => {
-            if (this.isPanning) {
+            
+             if (this.isPanning) {
                 e.preventDefault();
                 this.panImage(e);
-            } else {
-                this.drawRectangle(e);
+            } 
+            else{
+                if (this.drawMode === 'rect') {
+                    this.drawRectangle(e);
+                } else if (this.drawMode === 'line' && this.lineAnalyzer) {
+                    this.lineAnalyzer.draw(e);
+                }
                 this.updateCursorInfo(e);
             }
+
         });
 
-        // マウスアップ - 操作終了
+        // マウスアップ
         this.canvas.addEventListener('mouseup', (e) => {
             if (this.isPanning) {
                 this.endPan();
-            } else {
-                this.endDrawing(e);
+            } 
+            else
+            {
+                if (this.drawMode === 'rect') {
+                    this.endDrawing(e);
+                } else if (this.drawMode === 'line' && this.lineAnalyzer) {
+                    this.lineAnalyzer.end(e);
+                }
             }
         });
 
         // マウスリーブ - 操作中止・カーソル情報クリア
         this.canvas.addEventListener('mouseleave', (e) => {
-            if (this.isPanning) {
+
+             if (this.isPanning) {
                 this.endPan();
-            }
-            if (this.isDrawing) {
-                this.endDrawing(e);
-            }
+             }
+             else if (this.isDrawing) {
+                if (this.drawMode === 'rect') {
+                    this.endDrawing(e);
+                } else if (this.drawMode === 'line' && this.lineAnalyzer && this.lineAnalyzer.drawer.isDrawing) {
+                    this.lineAnalyzer.end(e);
+                }
+             }
             this.clearCursorInfo();
         });
 
@@ -189,6 +260,11 @@ Object.assign(ImageAnalyzer.prototype, {
         // キーボードイベント（ESCキーでモーダル閉じる）
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                const lineModal = document.getElementById('lineProfileModal');
+                if (lineModal && lineModal.style.display === 'flex') {
+                    if (this.lineAnalyzer) this.lineAnalyzer.closeModal();
+                    return;
+                }
                 const modal = document.getElementById('histogramModal');
                 if (modal && modal.style.display === 'flex') {
                     this.closeHistogramModal();
@@ -202,6 +278,14 @@ Object.assign(ImageAnalyzer.prototype, {
             modal.addEventListener('click', (e) => {
                 if (e.target.id === 'histogramModal') {
                     this.closeHistogramModal();
+                }
+            });
+        }
+        const lineModal = document.getElementById('lineProfileModal');
+        if (lineModal) {
+            lineModal.addEventListener('click', (e) => {
+                if (e.target.id === 'lineProfileModal' && this.lineAnalyzer) {
+                    this.lineAnalyzer.closeModal();
                 }
             });
         }
